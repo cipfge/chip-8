@@ -4,6 +4,7 @@ set(EMULATOR_SOURCE_FILES
     "emulator.hpp"
     "emulator.cpp"
     "platform.hpp"
+    "utils.hpp"
     "main.cpp"
     )
 

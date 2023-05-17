@@ -1,6 +1,7 @@
 #include "emulator.hpp"
-#include <string>
+#include "utils.hpp"
 #include <cstring>
+#include <fstream>
 #include <SDL.h>
 
 // Font data
@@ -40,28 +41,59 @@ Emulator::~Emulator()
 
 bool Emulator::init(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        error("No CHIP-8 rom file specified");
+        return false;
+    }
+
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
-        std::string message = "SDL_Init error: " + std::string(SDL_GetError());
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(), nullptr);
+        error("SDL_Init error: " + std::string(SDL_GetError()));
         return false;
     }
 
     m_window = SDL_CreateWindow("CHIP-8", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, m_window_width, m_window_height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     if (!m_window)
     {
-        std::string message = "SDL_CreateWindow error: " + std::string(SDL_GetError());
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(), nullptr);
+        error("SDL_CreateWindow error: " + std::string(SDL_GetError()));
         return false;
     }
 
     m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_renderer)
     {
-        std::string message = "SDL_CreateRenderer error: " + std::string(SDL_GetError());
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(), nullptr);
+        error("SDL_CreateRenderer error: " + std::string(SDL_GetError()));
         return false;
     }
+
+    // Open rom file
+    std::string rom_path(argv[1]);
+    std::ifstream rom_file(rom_path, std::ifstream::binary);
+    if (!rom_file.is_open())
+    {
+       error("Cannot open ROM file " + rom_path);
+       return false;
+    }
+
+    uint32_t buffer_size = utils::get_file_size(rom_path);
+    if ((MemorySize - ResetVector) < buffer_size)
+    {
+        error("Invalid ROM size");
+        return false;
+    }
+
+    char* buffer = static_cast<char*>(malloc(sizeof(char) * buffer_size));
+    if (!rom_file.read(buffer, buffer_size))
+    {
+        error("Cannot read ROM file " + rom_path);
+        return false;
+    }
+
+    for (int index = 0; index < buffer_size; index++)
+        m_memory[index + ResetVector] = (uint8_t)buffer[index];
+
+    reset();
 
     return true;
 }
@@ -408,4 +440,9 @@ bool Emulator::wait_key_press()
     }
 
     return key_pressed;
+}
+
+void Emulator::error(const std::string& message)
+{
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(), m_window);
 }

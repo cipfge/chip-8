@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -76,4 +77,6 @@ private:
 
     void draw_pixel();
     bool wait_key_press();
+
+    void error(const std::string& message);
 };
