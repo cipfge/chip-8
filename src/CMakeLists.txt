@@ -1,8 +1,22 @@
+find_package(SDL2 REQUIRED)
+
 set(EMULATOR_SOURCE_FILES
+    "emulator.hpp"
+    "emulator.cpp"
+    "platform.hpp"
     "main.cpp"
     )
 
-add_executable(chip8 ${EMULATOR_SOURCE_FILES})
+set(APPLICATION_TYPE "")
+if (WIN32)
+    set(APPLICATION_TYPE "WIN32")
+endif()
+
+add_executable(chip8 ${APPLICATION_TYPE} ${EMULATOR_SOURCE_FILES})
+
+target_link_libraries(chip8
+    SDL2::SDL2
+    )
 
 target_include_directories(chip8
     PRIVATE
