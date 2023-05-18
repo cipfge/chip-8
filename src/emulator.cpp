@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include <cstring>
 #include <fstream>
+#include <thread>
 #include <SDL.h>
 
 // Font data
@@ -34,6 +35,7 @@ int Emulator::m_keymap[Emulator::KeyCount] = {
 
 Emulator::~Emulator()
 {
+    SDL_DestroyTexture(m_texture);
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
     SDL_Quit();
@@ -64,6 +66,13 @@ bool Emulator::init(int argc, char *argv[])
     if (!m_renderer)
     {
         error("SDL_CreateRenderer error: " + std::string(SDL_GetError()));
+        return false;
+    }
+
+    m_texture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, DisplayWidth, DisplayHeight);
+    if (!m_texture)
+    {
+        error("SDL_CreateTexture error: " + std::string(SDL_GetError()));
         return false;
     }
 
@@ -103,7 +112,14 @@ void Emulator::run()
     while (!m_exit)
     {
         handle_input();
+        execute();
+
+        if (m_display_updated)
+            update_color_buffer();
+
         render();
+        update_timers();
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 }
 
@@ -133,9 +149,22 @@ void Emulator::handle_input()
     }
 }
 
+void Emulator::update_color_buffer()
+{
+    for (int index = 0; index < (DisplayWidth * DisplayHeight); index++)
+    {
+        uint8_t pixel = m_display[index];
+        m_color_buffer[index] = (0x00FFFF00 * pixel) | 0xFF000000;
+    }
+
+    m_display_updated = false;
+}
+
 void Emulator::render()
 {
     SDL_RenderClear(m_renderer);
+    SDL_UpdateTexture(m_texture, nullptr, m_color_buffer, DisplayWidth * sizeof(uint32_t));
+    SDL_RenderCopy(m_renderer, m_texture, nullptr, nullptr);
     SDL_RenderPresent(m_renderer);
 }
 
@@ -353,7 +382,7 @@ void Emulator::execute()
             break;
 
         case 0x15:
-            m_delay_timer =m_registers.V[m_opcode.x];
+            m_delay_timer = m_registers.V[m_opcode.x];
             break;
 
         case 0x18:
@@ -371,7 +400,7 @@ void Emulator::execute()
 
         case 0x33:
             m_memory[m_registers.I & 0xFFF] = (m_registers.V[m_opcode.x] % 1000) / 100;
-            m_memory[(m_registers.I + 1) & 0xFFF] =  (m_registers.V[m_opcode.x] % 10) / 10;
+            m_memory[(m_registers.I + 1) & 0xFFF] =  (m_registers.V[m_opcode.x] / 10) % 10;
             m_memory[(m_registers.I + 2) & 0xFFF] = m_registers.V[m_opcode.x] % 10;
             break;
 

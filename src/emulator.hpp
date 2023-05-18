@@ -5,6 +5,7 @@
 
 struct SDL_Window;
 struct SDL_Renderer;
+struct SDL_Texture;
 
 class Emulator
 {
@@ -44,9 +45,10 @@ public:
 private:
     SDL_Window *m_window = nullptr;
     SDL_Renderer *m_renderer = nullptr;
+    SDL_Texture *m_texture = nullptr;
 
-    uint32_t m_window_width = 800;
-    uint32_t m_window_height = 800;
+    uint32_t m_window_width = 500;
+    uint32_t m_window_height = 250;
     bool m_exit = false;
 
     Registers m_registers;
@@ -55,6 +57,7 @@ private:
     uint8_t m_memory[MemorySize] = { 0 };
     uint16_t m_stack[StackSize] = { 0 };
     uint8_t m_display[DisplayWidth * DisplayHeight] = { 0 };
+    uint32_t m_color_buffer[DisplayWidth * DisplayHeight] = { 0 };
     bool m_display_updated = false;
     uint8_t m_delay_timer = 0;
     uint8_t m_sound_timer = 0;
@@ -63,6 +66,7 @@ private:
     static int m_keymap[KeyCount];
 
     void handle_input();
+    void update_color_buffer();
     void render();
     void reset();
 
