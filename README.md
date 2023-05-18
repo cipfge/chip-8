@@ -2,6 +2,8 @@
 
 CHIP-8 emulator written in C++ for the purpose of learning about emulation.
 
+![screenshot](docs/screenshot.png)
+
 ## Requirements
 - C++ compiler (gcc, clang, MSVC)
 - CMake
