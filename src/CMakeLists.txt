@@ -1,4 +1,5 @@
-find_package(SDL2 REQUIRED)
+find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
+find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 set(EMULATOR_SOURCE_FILES
     "emulator.hpp"
@@ -15,9 +16,11 @@ endif()
 
 add_executable(chip8 ${APPLICATION_TYPE} ${EMULATOR_SOURCE_FILES})
 
-target_link_libraries(chip8
-    SDL2::SDL2
-    )
+if (TARGET SDL2::SDL2main)
+    target_link_libraries(chip8 PRIVATE SDL2::SDL2main)
+endif()
+
+target_link_libraries(chip8 PRIVATE SDL2::SDL2)
 
 target_include_directories(chip8
     PRIVATE
