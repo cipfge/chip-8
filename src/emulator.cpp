@@ -109,6 +109,12 @@ bool Emulator::init(int argc, char *argv[])
 
 void Emulator::run()
 {
+    constexpr auto TIMER = 60; // hz
+    constexpr auto DELAY = 1000.0f / TIMER;
+
+    uint32_t frame_start = SDL_GetTicks();
+    uint32_t frame_time = 0;
+
     while (!m_exit)
     {
         handle_input();
@@ -118,8 +124,15 @@ void Emulator::run()
             update_color_buffer();
 
         render();
-        update_timers();
-        std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+        frame_time = SDL_GetTicks() - frame_start;
+        if (frame_time >= DELAY)
+        {
+            update_timers();
+            frame_start = SDL_GetTicks();
+        }
+
+        std::this_thread::sleep_for(std::chrono::microseconds(125));
     }
 }
 
