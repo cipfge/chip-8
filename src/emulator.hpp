@@ -81,6 +81,8 @@ private:
     void execute();
     void update_timers();
 
+    uint8_t generate_random_byte();
+
     void draw_pixel();
     bool wait_key_press();
 

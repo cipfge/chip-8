@@ -2,6 +2,7 @@
 #include "utils.hpp"
 #include <cstring>
 #include <fstream>
+#include <random>
 #include <thread>
 
 // Font data
@@ -158,6 +159,7 @@ void Emulator::run()
             frame_start = SDL_GetTicks();
         }
 
+        // TODO: Tick CPU for about a frame or until waiting for key press
         std::this_thread::sleep_for(std::chrono::microseconds(125));
     }
 }
@@ -385,7 +387,7 @@ void Emulator::execute()
         break;
 
     case 0xC:
-        m_registers.V[m_opcode.x] = (std::rand() % 0xFF) & m_opcode.kk;
+        m_registers.V[m_opcode.x] = generate_random_byte() & m_opcode.kk;
         break;
 
     case 0xD:
@@ -471,6 +473,14 @@ void Emulator::update_timers()
     {
         SDL_PauseAudioDevice(m_audio_device, 1);
     }
+}
+
+uint8_t Emulator::generate_random_byte()
+{
+    std::random_device rand_dev;
+    std::mt19937 rng(rand_dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0,255);
+    return dist(rng);
 }
 
 void Emulator::draw_pixel()
