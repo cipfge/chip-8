@@ -2,10 +2,7 @@
 
 #include <cstdint>
 #include <string>
-
-struct SDL_Window;
-struct SDL_Renderer;
-struct SDL_Texture;
+#include <SDL.h>
 
 class Emulator
 {
@@ -46,6 +43,8 @@ private:
     SDL_Window *m_window = nullptr;
     SDL_Renderer *m_renderer = nullptr;
     SDL_Texture *m_texture = nullptr;
+    SDL_AudioSpec m_audio_spec {};
+    SDL_AudioDeviceID m_audio_device = 0;
 
     uint32_t m_window_width = 500;
     uint32_t m_window_height = 250;
@@ -65,6 +64,9 @@ private:
     static uint8_t m_font[FontSize];
     static int m_keymap[KeyCount];
 
+    // Audio sample index
+    int m_audio_position = 0;
+
     void handle_input();
     void update_color_buffer();
     void render();
@@ -81,6 +83,9 @@ private:
 
     void draw_pixel();
     bool wait_key_press();
+
+    double get_audio_sample();
+    void write_audio_data(uint8_t* buffer, double data);
 
     void error(const std::string& message);
 };

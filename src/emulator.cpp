@@ -3,7 +3,6 @@
 #include <cstring>
 #include <fstream>
 #include <thread>
-#include <SDL.h>
 
 // Font data
 uint8_t Emulator::m_font[Emulator::FontSize] = {
@@ -35,6 +34,7 @@ int Emulator::m_keymap[Emulator::KeyCount] = {
 
 Emulator::~Emulator()
 {
+    SDL_CloseAudioDevice(m_audio_device);
     SDL_DestroyTexture(m_texture);
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
@@ -75,6 +75,32 @@ bool Emulator::init(int argc, char *argv[])
         error("SDL_CreateTexture error: " + std::string(SDL_GetError()));
         return false;
     }
+
+    // Init audio
+    SDL_AudioSpec audio_spec;
+    audio_spec.freq     = 44100;
+    audio_spec.format   = AUDIO_S16;
+    audio_spec.channels = 1;
+    audio_spec.samples  = audio_spec.freq / 20;
+    audio_spec.userdata = this;
+
+    audio_spec.callback = [](void *user_data, unsigned char *stream, int size)
+    {
+        Emulator *emu = static_cast<Emulator*>(user_data);
+        for (int sample = 0; sample < emu->m_audio_spec.samples; sample++)
+        {
+            double data = emu->get_audio_sample();
+
+            for (int channel = 0; channel < emu->m_audio_spec.channels; channel++)
+            {
+                int offset = (sample * sizeof(int16_t) * emu->m_audio_spec.channels) + (channel * sizeof(int16_t));
+                uint8_t* buffer = stream + offset;
+                emu->write_audio_data(buffer, data);
+            }
+        }
+    };
+
+    m_audio_device = SDL_OpenAudioDevice(nullptr, 0, &audio_spec, &m_audio_spec, 0);
 
     // Open rom file
     std::string rom_path(argv[1]);
@@ -437,7 +463,14 @@ void Emulator::update_timers()
         m_delay_timer--;
 
     if (m_sound_timer > 0)
+    {
+        SDL_PauseAudioDevice(m_audio_device, 0);
         m_sound_timer--;
+    }
+    else
+    {
+        SDL_PauseAudioDevice(m_audio_device, 1);
+    }
 }
 
 void Emulator::draw_pixel()
@@ -482,6 +515,27 @@ bool Emulator::wait_key_press()
     }
 
     return key_pressed;
+}
+
+double Emulator::get_audio_sample()
+{
+    double sample_rate = (double)(m_audio_spec.freq);
+    double period = sample_rate / 800;
+
+    m_audio_position++;
+    if (m_audio_position % (int)period == 0)
+        m_audio_position = 0;
+
+    double angular_freq = (1.0 / period) * 2.0 * M_PI;
+    return sin(m_audio_position * angular_freq);
+}
+
+void Emulator::write_audio_data(uint8_t* buffer, double data)
+{
+    int16_t* b = (int16_t*)buffer;
+    double range = (double)INT16_MAX - (double)INT16_MIN;
+    double normalized = data * range / 2.0;
+    *b = normalized;
 }
 
 void Emulator::error(const std::string& message)
