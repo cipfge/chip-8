@@ -11,7 +11,7 @@ static int emulator_main(int argc, char *argv[])
     return 0;
 }
 
-#ifdef EMULATOR_PLATFORM_LINUX
+#if defined(EMULATOR_PLATFORM_LINUX) || defined(EMULATOR_PLATFORM_APPLE)
 
 int main(int argc, char *argv[])
 {
