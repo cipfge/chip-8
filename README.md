@@ -26,14 +26,14 @@ Run:
 ./chip8 rom_file
 ```
 
-## Windows with MSVC
+## Windows
 
+### Visual Studio
 Download [SDL2-devel-2.26.3-VC.zip](https://github.com/libsdl-org/SDL/releases/download/release-2.26.3/SDL2-devel-2.26.3-VC.zip) and extract it to **thirdparty** folder.
 
 Open **chip-8** folder in **Visual Studio**
 
-## Windows with MSYS2
-
+### MSYS2
 Install [MSYS2](https://www.msys2.org/) follow instructions on **MSYS2** site.
 
 Open **MSYS2** console and install MinGW, cmake and SDL2
