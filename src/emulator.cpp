@@ -39,6 +39,10 @@ int Emulator::m_keymap[Emulator::KeyCount] = {
 
 Emulator::~Emulator()
 {
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
     SDL_CloseAudioDevice(m_audio_device);
     SDL_DestroyTexture(m_texture);
     SDL_DestroyRenderer(m_renderer);
