@@ -1,5 +1,9 @@
 #include "emulator.hpp"
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
 #include "utils.hpp"
+#include "platform.hpp"
 #include <cstring>
 #include <fstream>
 #include <random>
@@ -42,13 +46,12 @@ Emulator::~Emulator()
     SDL_Quit();
 }
 
-bool Emulator::init(int argc, char *argv[])
+bool Emulator::init()
 {
-    if (argc < 2)
-    {
-        error("No CHIP-8 rom file specified");
-        return false;
-    }
+#ifdef __linux__
+    SDL_setenv("SDL_VIDEO_WAYLAND_WMCLASS", "chip8-emulator", 0);
+    SDL_setenv("SDL_VIDEO_X11_WMCLASS",     "chip8-emulator", 0);
+#endif // Linux
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
@@ -103,33 +106,19 @@ bool Emulator::init(int argc, char *argv[])
 
     m_audio_device = SDL_OpenAudioDevice(nullptr, 0, &audio_spec, &m_audio_spec, 0);
 
-    // Open rom file
-    std::string rom_path(argv[1]);
-    std::ifstream rom_file(rom_path, std::ifstream::binary);
-    if (!rom_file.is_open())
-    {
-       error("Cannot open ROM file " + rom_path);
-       return false;
-    }
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
 
-    uint32_t buffer_size = utils::get_file_size(rom_path);
-    if ((MemorySize - ResetVector) < buffer_size)
-    {
-        error("Invalid ROM size");
-        return false;
-    }
+    ImGuiIO& imgui_io = ImGui::GetIO();
+    imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    imgui_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    imgui_io.IniFilename = nullptr;
 
-    char* buffer = static_cast<char*>(malloc(sizeof(char) * buffer_size));
-    if (!rom_file.read(buffer, buffer_size))
-    {
-        error("Cannot read ROM file " + rom_path);
-        return false;
-    }
+    ImGui_ImplSDL2_InitForSDLRenderer(m_window, m_renderer);
+    ImGui_ImplSDLRenderer2_Init(m_renderer);
 
-    for (int index = 0; index < buffer_size; index++)
-        m_memory[index + ResetVector] = (uint8_t)buffer[index];
-
-    reset();
+    m_window_height = m_window_height + (int)ImGui::GetFrameHeight();
+    SDL_SetWindowSize(m_window, m_window_width, m_window_height);
 
     return true;
 }
@@ -145,7 +134,8 @@ void Emulator::run()
     while (!m_exit)
     {
         handle_input();
-        execute();
+        if (!m_paused)
+            execute();
 
         if (m_display_updated)
             update_color_buffer();
@@ -170,10 +160,28 @@ void Emulator::handle_input()
 
     while (SDL_PollEvent(&event))
     {
+        ImGui_ImplSDL2_ProcessEvent(&event);
+
         switch (event.type)
         {
         case SDL_QUIT:
-            m_exit = true;
+            m_should_exit = true;
+            break;
+
+        case SDL_KEYDOWN:
+            if (event.key.keysym.sym == SDLK_o &&
+                event.key.keysym.mod & KMOD_CTRL &&
+                event.key.repeat == 0)
+            {
+                open_rom_file();
+            }
+
+            if (event.key.keysym.sym == SDLK_r &&
+                event.key.keysym.mod & KMOD_CTRL &&
+                event.key.repeat == 0)
+            {
+                reset();
+            }
             break;
 
         case SDL_WINDOWEVENT:
@@ -205,8 +213,121 @@ void Emulator::render()
 {
     SDL_RenderClear(m_renderer);
     SDL_UpdateTexture(m_texture, nullptr, m_color_buffer, DisplayWidth * sizeof(uint32_t));
-    SDL_RenderCopy(m_renderer, m_texture, nullptr, nullptr);
+    SDL_Rect screen_rect = { 0, (int)ImGui::GetFrameHeight(), m_window_width, m_window_height - (int)ImGui::GetFrameHeight() };
+    SDL_RenderCopy(m_renderer, m_texture, nullptr, &screen_rect);
+
+    render_user_interface();
+
     SDL_RenderPresent(m_renderer);
+}
+
+void Emulator::render_user_interface()
+{
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+
+    ImGui::NewFrame();
+
+    render_menubar();
+    if (m_should_exit)
+        ImGui::OpenPopup("Exit");
+    render_exit_dialog();
+
+    if (m_show_about)
+        ImGui::OpenPopup("About");
+    render_about_dialog();
+
+    ImGui::EndFrame();
+    ImGui::Render();
+
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Emulator::render_menubar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Open ROM...", "Ctr+O"))
+                open_rom_file();
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit", "Alt+F4"))
+                m_should_exit = true;
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Emulation"))
+        {
+            if (ImGui::MenuItem("Reset", "Ctr+R"))
+                reset();
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Help"))
+        {
+            if (ImGui::MenuItem("About CHIP-8..."))
+                m_show_about = true;
+
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void Emulator::render_exit_dialog()
+{
+    if (ImGui::BeginPopupModal("Exit", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        m_should_exit = false;
+        m_paused = true;
+
+        ImGui::Text("Are you sure you want to exit?");
+        ImGui::Separator();
+
+        if (ImGui::Button("Yes", ImVec2(120, 0)))
+        {
+            m_exit = true;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+
+        if (ImGui::Button("No", ImVec2(120, 0)))
+        {
+            m_paused = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void Emulator::render_about_dialog()
+{
+    if (ImGui::BeginPopupModal("About", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        m_show_about = false;
+        m_paused = true;
+
+        ImGui::Text("CHIP-8 Emulator");
+        ImGui::Text("Version: 1.0");
+        ImGui::Separator();
+
+        ImGui::SetItemDefaultFocus();
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            m_paused = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 void Emulator::reset()
@@ -546,6 +667,46 @@ void Emulator::write_audio_data(uint8_t* buffer, double data)
     double range = (double)INT16_MAX - (double)INT16_MIN;
     double normalized = data * range / 2.0;
     *b = normalized;
+}
+
+#include <iostream>
+void Emulator::open_rom_file()
+{
+    std::string rom_path = platform::open_file_dialog(m_window);
+    if (rom_path.empty())
+        return;
+
+#ifdef __linux__
+    // Remove '\n' from rom path, fixme
+    rom_path.pop_back();
+#endif // Linux
+
+    std::ifstream rom_file(rom_path, std::ifstream::binary);
+    if (!rom_file.is_open())
+    {
+       error("Cannot open ROM file " + rom_path);
+       std::cout << rom_path << "\n";
+       return;
+    }
+
+    uint32_t buffer_size = utils::get_file_size(rom_path);
+    if ((MemorySize - ResetVector) < buffer_size)
+    {
+        error("Invalid ROM size");
+        return;
+    }
+
+    char* buffer = static_cast<char*>(malloc(sizeof(char) * buffer_size));
+    if (!rom_file.read(buffer, buffer_size))
+    {
+        error("Cannot read ROM file " + rom_path);
+        return;
+    }
+
+    for (int index = 0; index < buffer_size; index++)
+        m_memory[index + ResetVector] = (uint8_t)buffer[index];
+
+    reset();
 }
 
 void Emulator::error(const std::string& message)

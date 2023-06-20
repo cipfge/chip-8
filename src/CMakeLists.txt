@@ -2,10 +2,27 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 set(EMULATOR_SOURCE_FILES
+    "imgui/imconfig.h"
+    "imgui/imgui.cpp"
+    "imgui/imgui_demo.cpp"
+    "imgui/imgui_draw.cpp"
+    "imgui/imgui.h"
+    "imgui/imgui_impl_sdl2.cpp"
+    "imgui/imgui_impl_sdl2.h"
+    "imgui/imgui_impl_sdlrenderer2.cpp"
+    "imgui/imgui_impl_sdlrenderer2.h"
+    "imgui/imgui_internal.h"
+    "imgui/imgui_tables.cpp"
+    "imgui/imgui_widgets.cpp"
+    "imgui/imstb_rectpack.h"
+    "imgui/imstb_textedit.h"
+    "imgui/imstb_truetype.h"
     "emulator.hpp"
     "emulator.cpp"
-    "platform.hpp"
     "utils.hpp"
+    "platform.hpp"
+    "platform_linux.cpp"
+    "platform_windows.cpp"
     "main.cpp"
     )
 
@@ -24,7 +41,8 @@ target_link_libraries(chip8 PRIVATE SDL2::SDL2)
 
 target_include_directories(chip8
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/imgui"
     )
 
 set_target_properties(chip8

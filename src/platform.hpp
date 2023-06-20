@@ -1,11 +1,12 @@
 #pragma once
 
-#if defined(_WIN64) || defined(_WIN32)
-    #define EMULATOR_PLATFORM_WINDOWS
-#elif defined(__linux__)
-    #define EMULATOR_PLATFORM_LINUX
-#elif defined(__APPLE__)
-    #define EMULATOR_PLATFORM_APPLE
-#else
-    #error "Unsupported platform detected"
-#endif
+#include <string>
+
+struct SDL_Window;
+
+namespace platform
+{
+
+std::string open_file_dialog(const SDL_Window* owner);
+
+} // namespace platform

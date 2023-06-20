@@ -36,7 +36,7 @@ public:
     static inline constexpr uint32_t DisplayHeight = 32;
     static inline constexpr uint32_t KeyCount = 16;
 
-    bool init(int argc, char *argv[]);
+    bool init();
     void run();
 
 private:
@@ -46,9 +46,12 @@ private:
     SDL_AudioSpec m_audio_spec {};
     SDL_AudioDeviceID m_audio_device = 0;
 
-    uint32_t m_window_width = 500;
-    uint32_t m_window_height = 250;
+    int m_window_width = 500;
+    int m_window_height = 250;
+    bool m_should_exit = false;
     bool m_exit = false;
+    bool m_show_about = false;
+    bool m_paused = false;
 
     Registers m_registers;
     Opcode m_opcode;
@@ -70,8 +73,12 @@ private:
     void handle_input();
     void update_color_buffer();
     void render();
-    void reset();
+    void render_user_interface();
+    void render_menubar();
+    void render_exit_dialog();
+    void render_about_dialog();
 
+    void reset();
     uint8_t read(uint16_t address);
     uint16_t read_word(uint16_t address);
     void write(uint16_t address, uint8_t value);
@@ -88,6 +95,8 @@ private:
 
     double get_audio_sample();
     void write_audio_data(uint8_t* buffer, double data);
+
+    void open_rom_file();
 
     void error(const std::string& message);
 };
