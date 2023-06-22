@@ -6,14 +6,10 @@
 
 static int emulator_main(int argc, char *argv[])
 {
-    // Not used at the moment
-    (void)argc;
-    (void)argv;
-
     Emulator chip8;
     if (!chip8.init())
         return -1;
-    chip8.run();
+    chip8.run(argc, argv);
 
     return 0;
 }

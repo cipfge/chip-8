@@ -37,7 +37,7 @@ public:
     static inline constexpr uint32_t KeyCount = 16;
 
     bool init();
-    void run();
+    void run(int argc, char* argv[]);
 
 private:
     SDL_Window *m_window = nullptr;
@@ -48,6 +48,7 @@ private:
 
     int m_window_width = 500;
     int m_window_height = 250;
+    bool m_rom_loaded = false;
     bool m_should_exit = false;
     bool m_exit = false;
     bool m_show_about = false;
@@ -79,13 +80,15 @@ private:
     void render_about_dialog();
 
     void reset();
+    void stop();
+    void toggle_pause();
     uint8_t read(uint16_t address);
     uint16_t read_word(uint16_t address);
     void write(uint16_t address, uint8_t value);
     void stack_push(uint16_t value);
     uint16_t stack_pop();
     void fetch();
-    void execute();
+    void execute_next_instruction();
     void update_timers();
 
     uint8_t generate_random_byte();
@@ -97,6 +100,7 @@ private:
     void write_audio_data(uint8_t* buffer, double data);
 
     void open_rom_file();
+    void load_rom_from_file(const std::string& rom_path);
 
     void error(const std::string& message);
 };

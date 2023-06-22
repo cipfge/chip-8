@@ -127,7 +127,7 @@ bool Emulator::init()
     return true;
 }
 
-void Emulator::run()
+void Emulator::run(int argc, char* argv[])
 {
     constexpr auto TIMER = 60; // hz
     constexpr auto DELAY = 1000.0f / TIMER;
@@ -135,23 +135,28 @@ void Emulator::run()
     uint32_t frame_start = SDL_GetTicks();
     uint32_t frame_time = 0;
 
+    if (argc > 1)
+        load_rom_from_file(argv[1]);
+
     while (!m_exit)
     {
         handle_input();
-        if (!m_paused)
-            execute();
+        if (m_rom_loaded && !m_paused)
+        {
+            execute_next_instruction();
 
-        if (m_display_updated)
-            update_color_buffer();
+            if (m_display_updated)
+                update_color_buffer();
+
+            frame_time = SDL_GetTicks() - frame_start;
+            if (frame_time >= DELAY)
+            {
+                update_timers();
+                frame_start = SDL_GetTicks();
+            }
+        }
 
         render();
-
-        frame_time = SDL_GetTicks() - frame_start;
-        if (frame_time >= DELAY)
-        {
-            update_timers();
-            frame_start = SDL_GetTicks();
-        }
 
         // TODO: Tick CPU for about a frame or until waiting for key press
         std::this_thread::sleep_for(std::chrono::microseconds(125));
@@ -185,6 +190,20 @@ void Emulator::handle_input()
                 event.key.repeat == 0)
             {
                 reset();
+            }
+
+            if (event.key.keysym.sym == SDLK_s &&
+                event.key.keysym.mod & KMOD_CTRL &&
+                event.key.repeat == 0)
+            {
+                stop();
+            }
+
+            if (event.key.keysym.sym == SDLK_p &&
+                event.key.keysym.mod & KMOD_CTRL &&
+                event.key.repeat == 0)
+            {
+                toggle_pause();
             }
             break;
 
@@ -265,8 +284,33 @@ void Emulator::render_menubar()
 
         if (ImGui::BeginMenu("Emulation"))
         {
+            std::string pause_str = "Pause";
+            if (m_paused)
+                pause_str = "Resume";
+
+            if (ImGui::MenuItem(pause_str.c_str(), "Ctr+P"))
+                toggle_pause();
+
             if (ImGui::MenuItem("Reset", "Ctr+R"))
                 reset();
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Stop", "Ctr+S"))
+                stop();
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View"))
+        {
+            if (ImGui::MenuItem("Classic"))
+                ImGui::StyleColorsClassic();
+
+            if (ImGui::MenuItem("Dark theme"))
+                ImGui::StyleColorsDark();
+
+            if (ImGui::MenuItem("Light theme"))
+                ImGui::StyleColorsLight();
 
             ImGui::EndMenu();
         }
@@ -355,6 +399,21 @@ void Emulator::reset()
     std::memset(m_stack, 0x00, sizeof(m_stack));
     std::memset(m_display, 0x00, sizeof(m_display));
     m_display_updated = true;
+
+    if (m_paused)
+        m_paused = false;
+}
+
+void Emulator::stop()
+{
+    std::memset(m_memory, 0x00, sizeof(m_memory));
+    m_rom_loaded = false;
+    reset();
+}
+
+void Emulator::toggle_pause()
+{
+    m_paused = !m_paused;
 }
 
 uint8_t Emulator::read(uint16_t address)
@@ -400,7 +459,7 @@ void Emulator::fetch()
     m_registers.PC += 2;
 }
 
-void Emulator::execute()
+void Emulator::execute_next_instruction()
 {
     fetch();
 
@@ -673,7 +732,6 @@ void Emulator::write_audio_data(uint8_t* buffer, double data)
     *b = normalized;
 }
 
-#include <iostream>
 void Emulator::open_rom_file()
 {
     std::string rom_path = platform::open_file_dialog(m_window);
@@ -685,11 +743,15 @@ void Emulator::open_rom_file()
     rom_path.pop_back();
 #endif // Linux
 
+    load_rom_from_file(rom_path);
+}
+
+void Emulator::load_rom_from_file(const std::string& rom_path)
+{
     std::ifstream rom_file(rom_path, std::ifstream::binary);
     if (!rom_file.is_open())
     {
        error("Cannot open ROM file " + rom_path);
-       std::cout << rom_path << "\n";
        return;
     }
 
@@ -710,6 +772,7 @@ void Emulator::open_rom_file()
     for (int index = 0; index < buffer_size; index++)
         m_memory[index + ResetVector] = (uint8_t)buffer[index];
 
+    m_rom_loaded = true;
     reset();
 }
 
