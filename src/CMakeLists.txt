@@ -12,6 +12,7 @@ set(EMULATOR_SOURCE_FILES
     "imgui/imgui_impl_sdlrenderer2.cpp"
     "imgui/imgui_impl_sdlrenderer2.h"
     "imgui/imgui_internal.h"
+    "imgui/imgui_memory_editor.h"
     "imgui/imgui_tables.cpp"
     "imgui/imgui_widgets.cpp"
     "imgui/imstb_rectpack.h"

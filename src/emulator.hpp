@@ -53,6 +53,8 @@ private:
     bool m_exit = false;
     bool m_show_about = false;
     bool m_paused = false;
+    bool m_show_cpu_window = false;
+    bool m_show_memory_window = false;
 
     Registers m_registers;
     Opcode m_opcode;
@@ -78,6 +80,8 @@ private:
     void render_menubar();
     void render_exit_dialog();
     void render_about_dialog();
+    void render_cpu_window();
+    void render_memory_window();
 
     void reset();
     void stop();

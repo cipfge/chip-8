@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_sdlrenderer2.h"
+#include "imgui_memory_editor.h"
 #include "utils.hpp"
 #include "platform.hpp"
 #include <cstring>
@@ -260,6 +261,12 @@ void Emulator::render_user_interface()
         ImGui::OpenPopup("About");
     render_about_dialog();
 
+    if (m_show_cpu_window)
+        render_cpu_window();
+
+    if (m_show_memory_window)
+        render_memory_window();
+
     ImGui::EndFrame();
     ImGui::Render();
 
@@ -303,6 +310,10 @@ void Emulator::render_menubar()
 
         if (ImGui::BeginMenu("View"))
         {
+            ImGui::MenuItem("CPU Window", NULL, &m_show_cpu_window);
+            ImGui::MenuItem("Memory Window", NULL, &m_show_memory_window);
+            ImGui::Separator();
+
             if (ImGui::MenuItem("Classic"))
                 ImGui::StyleColorsClassic();
 
@@ -376,6 +387,40 @@ void Emulator::render_about_dialog()
 
         ImGui::EndPopup();
     }
+}
+
+void Emulator::render_cpu_window()
+{
+    ImGui::Begin("CPU", &m_show_cpu_window);
+
+    ImGui::Text("   PC: 0x%04X", m_registers.PC);
+    ImGui::Text("   SP: 0x%04X", m_registers.SP);
+    ImGui::Text("    I: 0x%04X", m_registers.I);
+
+    ImGui::Text(" V[0]: 0x%02X", m_registers.V[0]); ImGui::SameLine();
+    ImGui::Text(" V[1]: 0x%02X", m_registers.V[1]); ImGui::SameLine();
+    ImGui::Text(" V[2]: 0x%02X", m_registers.V[2]); ImGui::SameLine();
+    ImGui::Text(" V[3]: 0x%02X", m_registers.V[3]);
+    ImGui::Text(" V[4]: 0x%02X", m_registers.V[4]); ImGui::SameLine();
+    ImGui::Text(" V[5]: 0x%02X", m_registers.V[5]); ImGui::SameLine();
+    ImGui::Text(" V[6]: 0x%02X", m_registers.V[6]); ImGui::SameLine();
+    ImGui::Text(" V[7]: 0x%02X", m_registers.V[7]);
+    ImGui::Text(" V[8]: 0x%02X", m_registers.V[8]); ImGui::SameLine();
+    ImGui::Text(" V[9]: 0x%02X", m_registers.V[9]); ImGui::SameLine();
+    ImGui::Text("V[10]: 0x%02X", m_registers.V[10]); ImGui::SameLine();
+    ImGui::Text("V[11]: 0x%02X", m_registers.V[11]);
+    ImGui::Text("V[12]: 0x%02X", m_registers.V[12]); ImGui::SameLine();
+    ImGui::Text("V[13]: 0x%02X", m_registers.V[13]); ImGui::SameLine();
+    ImGui::Text("V[14]: 0x%02X", m_registers.V[14]); ImGui::SameLine();
+    ImGui::Text("V[15]: 0x%02X", m_registers.V[15]);
+
+    ImGui::End();
+}
+
+void Emulator::render_memory_window()
+{
+    static MemoryEditor memory_window;
+    memory_window.DrawWindow("Memory", m_memory, sizeof(m_memory), ResetVector);
 }
 
 void Emulator::reset()
