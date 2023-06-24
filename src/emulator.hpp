@@ -4,6 +4,8 @@
 #include <string>
 #include <SDL.h>
 
+struct MemoryEditor;
+
 class Emulator
 {
 public:
@@ -46,6 +48,8 @@ private:
     SDL_AudioSpec m_audio_spec {};
     SDL_AudioDeviceID m_audio_device = 0;
 
+    MemoryEditor *m_memory_window = nullptr;
+
     int m_window_width = 500;
     int m_window_height = 250;
     bool m_rom_loaded = false;
@@ -54,7 +58,6 @@ private:
     bool m_show_about = false;
     bool m_paused = false;
     bool m_show_cpu_window = false;
-    bool m_show_memory_window = false;
 
     Registers m_registers;
     Opcode m_opcode;

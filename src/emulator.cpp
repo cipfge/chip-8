@@ -40,6 +40,8 @@ int Emulator::m_keymap[Emulator::KeyCount] = {
 
 Emulator::~Emulator()
 {
+    delete m_memory_window;
+
     ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
@@ -125,6 +127,9 @@ bool Emulator::init()
     m_window_height = m_window_height + (int)ImGui::GetFrameHeight();
     SDL_SetWindowSize(m_window, m_window_width, m_window_height);
 
+    m_memory_window = new MemoryEditor();
+    m_memory_window->Open = false;
+
     return true;
 }
 
@@ -160,7 +165,7 @@ void Emulator::run(int argc, char* argv[])
         render();
 
         // TODO: Tick CPU for about a frame or until waiting for key press
-        std::this_thread::sleep_for(std::chrono::microseconds(125));
+        std::this_thread::sleep_for(std::chrono::microseconds(150));
     }
 }
 
@@ -264,7 +269,7 @@ void Emulator::render_user_interface()
     if (m_show_cpu_window)
         render_cpu_window();
 
-    if (m_show_memory_window)
+    if (m_memory_window->Open)
         render_memory_window();
 
     ImGui::EndFrame();
@@ -311,17 +316,21 @@ void Emulator::render_menubar()
         if (ImGui::BeginMenu("View"))
         {
             ImGui::MenuItem("CPU Window", NULL, &m_show_cpu_window);
-            ImGui::MenuItem("Memory Window", NULL, &m_show_memory_window);
+            ImGui::MenuItem("Memory Window", NULL, &m_memory_window->Open);
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Classic"))
-                ImGui::StyleColorsClassic();
+            if (ImGui::BeginMenu("Theme"))
+            {
+                if (ImGui::MenuItem("Classic"))
+                    ImGui::StyleColorsClassic();
 
-            if (ImGui::MenuItem("Dark theme"))
-                ImGui::StyleColorsDark();
+                if (ImGui::MenuItem("Dark theme"))
+                    ImGui::StyleColorsDark();
 
-            if (ImGui::MenuItem("Light theme"))
-                ImGui::StyleColorsLight();
+                if (ImGui::MenuItem("Light theme"))
+                    ImGui::StyleColorsLight();
+                ImGui::EndMenu();
+            }
 
             ImGui::EndMenu();
         }
@@ -419,8 +428,7 @@ void Emulator::render_cpu_window()
 
 void Emulator::render_memory_window()
 {
-    static MemoryEditor memory_window;
-    memory_window.DrawWindow("Memory", m_memory, sizeof(m_memory), ResetVector);
+    m_memory_window->DrawWindow("Memory", m_memory, sizeof(m_memory), ResetVector);
 }
 
 void Emulator::reset()

@@ -1,10 +1,9 @@
 # CHIP-8
-
 CHIP-8 emulator written in C++ for the purpose of learning about emulation.
 
-![screenshot](docs/screenshot.png)
-![invaders](docs/screenshot_invaders.png)
-![dialogs](docs/screenshot_cpu_memory.png)
+![screenshot_cpu_test](docs/screenshot_cpu_test)
+![screenshot_invaders](docs/screenshot_invaders.png)
+![screenshot_cpu_memory](docs/screenshot_cpu_memory.png)
 
 ## Linux
 
