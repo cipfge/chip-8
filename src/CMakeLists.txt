@@ -20,6 +20,8 @@ set(EMULATOR_SOURCE_FILES
     "imgui/imstb_truetype.h"
     "emulator.hpp"
     "emulator.cpp"
+    "logger.hpp"
+    "logger.cpp"
     "utils.hpp"
     "platform.hpp"
     "platform_linux.cpp"

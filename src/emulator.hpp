@@ -108,6 +108,4 @@ private:
 
     void open_rom_file();
     void load_rom_from_file(const std::string& rom_path);
-
-    void error(const std::string& message);
 };
