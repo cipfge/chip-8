@@ -19,3 +19,27 @@ jobs:
           cd build
           cmake -G Ninja ..
           ninja
+
+  Windows:
+    runs-on: windows-2019
+    env:
+      VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\
+      MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://www.libsdl.org/release/SDL2-devel-2.26.3-VC.zip" -OutFile "SDL2-devel-2.26.3-VC.zip"
+          Expand-Archive -Path SDL2-devel-2.26.3-VC.zip
+          echo "SDL2_DIR=$(pwd)\SDL2-devel-2.26.3-VC\SDL2-2.26.3\" >>${env:GITHUB_ENV}
+
+      - name: Build
+        shell: cmd
+        run: |
+          call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat"
+          mkdir build
+          cd build
+          cmake -G "NMake Makefiles" ..
+          nmake
