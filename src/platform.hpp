@@ -7,6 +7,6 @@ struct SDL_Window;
 namespace platform
 {
 
-std::string open_file_dialog(const SDL_Window* owner);
+std::string open_file_dialog(SDL_Window* owner);
 
 } // namespace platform

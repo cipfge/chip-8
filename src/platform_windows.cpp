@@ -8,7 +8,7 @@
 namespace platform
 {
 
-inline HWND sdl_window_handle(const SDL_Window* window)
+inline HWND sdl_window_handle(SDL_Window* window)
 {
     if (!window)
         return nullptr;
@@ -20,7 +20,7 @@ inline HWND sdl_window_handle(const SDL_Window* window)
     return win_info.info.win.window;
 }
 
-std::string open_file_dialog(const SDL_Window* owner)
+std::string open_file_dialog(SDL_Window* owner)
 {
     constexpr auto PATH_MAX_SIZE = 512;
 
