@@ -6,6 +6,7 @@
 
 #if defined(_WIN64) || defined(_WIN32)
 #include <Windows.h>
+#include <debugapi.h>
 #endif // Windows
 
 namespace logger
@@ -25,7 +26,7 @@ inline void log_write_error(const std::string &message)
 #ifndef EMULATOR_DEBUG_ENABLED
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(), nullptr);
 #elif defined(_WIN64) || defined(_WIN32)
-    OutputDebugStr(message).c_str();
+    OutputDebugStrA(message).c_str();
 #else
     std::cerr << message << "\n";
 #endif // debug enabled and platform
@@ -34,7 +35,7 @@ inline void log_write_error(const std::string &message)
 inline void log_write(const std::string &message)
 {
 #if defined(_WIN64) || defined(_WIN32)
-    OutputDebugStr(message).c_str();
+    OutputDebugStrA(message).c_str();
 #else
     std::cout << message << "\n";
 #endif // platform
