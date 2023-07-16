@@ -29,9 +29,21 @@ set(EMULATOR_SOURCE_FILES
     "main.cpp"
     )
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+configure_file(
+    "version.hpp.in"
+    ${CMAKE_BINARY_DIR}/src/version.hpp
+    )
+
 set(APPLICATION_TYPE "")
 if (WIN32)
     set(APPLICATION_TYPE "WIN32")
+endif()
+
+set(RESOURCE_FILES "")
+if (WIN32)
+    list(APPEND RESOURCE_FILES "chip8.rc")
 endif()
 
 add_executable(chip8 ${APPLICATION_TYPE} ${EMULATOR_SOURCE_FILES})

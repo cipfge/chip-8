@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "utils.hpp"
 #include "platform.hpp"
+#include "version.hpp"
 #include <cstring>
 #include <fstream>
 #include <random>
@@ -384,8 +385,8 @@ void Emulator::render_about_dialog()
         m_show_about = false;
         m_paused = true;
 
-        ImGui::Text("CHIP-8 Emulator");
-        ImGui::Text("Version: 1.0");
+        ImGui::Text(CHIP8_VERSION_NAME);
+        ImGui::Text("Version: %s", CHIP8_VERSION_NUMBER);
         ImGui::Separator();
 
         ImGui::SetItemDefaultFocus();

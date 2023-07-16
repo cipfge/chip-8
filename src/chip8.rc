@@ -1,0 +1,46 @@
+#pragma code_page(65001) // UTF-8
+
+#include "version.hpp"
+#include <windows.h>
+
+#define VER_FILEVERSION             CHIP8_VERSION_MAJOR,CHIP8_VERSION_MINOR,CHIP8_VERSION_PATCH,0
+#define VER_FILEVERSION_STR         CHIP8_VERSION
+
+#define VER_PRODUCTVERSION          CHIP8_VERSION_MAJOR,CHIP8_VERSION_MINOR,CHIP8_VERSION_PATCH,0
+#define VER_PRODUCTVERSION_STR      CHIP8_VERSION
+
+#ifndef EMULATOR_DEBUG_ENABLED
+#define VER_DEBUG 0
+#else
+#define VER_DEBUG VS_FF_DEBUG
+#endif
+
+1 VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   VER_DEBUG
+FILEFLAGS       VER_DEBUG
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName",      CHIP8_VERSION_NAME
+            VALUE "FileDescription",  "CHIP-8 Emulator"
+            VALUE "FileVersion",      VER_FILEVERSION_STR
+            VALUE "InternalName",     CHIP8_VERSION_NAME
+            VALUE "LegalCopyright",   ""
+            VALUE "OriginalFilename", "chip8.exe"
+            VALUE "ProductName",      CHIP8_VERSION_NAME
+            VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
