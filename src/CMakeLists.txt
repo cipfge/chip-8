@@ -37,16 +37,18 @@ configure_file(
     )
 
 set(APPLICATION_TYPE "")
+set(RESOURCE_FILES "")
+
 if (WIN32)
     set(APPLICATION_TYPE "WIN32")
-endif()
-
-set(RESOURCE_FILES "")
-if (WIN32)
     list(APPEND RESOURCE_FILES "chip8.rc")
 endif()
 
-add_executable(chip8 ${APPLICATION_TYPE} ${EMULATOR_SOURCE_FILES})
+add_executable(chip8
+    ${APPLICATION_TYPE}
+    ${EMULATOR_SOURCE_FILES}
+    ${RESOURCE_FILES}
+    )
 
 if (TARGET SDL2::SDL2main)
     target_link_libraries(chip8 PRIVATE SDL2::SDL2main)
