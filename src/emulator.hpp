@@ -108,4 +108,6 @@ private:
 
     void open_rom_file();
     void load_rom_from_file(const std::string& rom_path);
+
+    void set_custom_dark_theme();
 };
