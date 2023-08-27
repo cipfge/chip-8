@@ -19,7 +19,12 @@ std::string open_file_dialog(SDL_Window* owner)
     const std::string command = "kdialog --getopenfilename $HOME \"CHIP-8 ROM (*.ch8)\"";
 
     FILE* handle = popen(command.c_str(), "r");
-    fgets(selected_file, sizeof(selected_file), handle);
+    if (fgets(selected_file, sizeof(selected_file), handle) == NULL)
+    {
+        pclose(handle);
+        return "";
+    }
+
     pclose(handle);
 
     return std::string(selected_file);
