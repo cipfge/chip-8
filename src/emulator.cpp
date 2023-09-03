@@ -661,7 +661,6 @@ void Emulator::execute_next_instruction()
         case 0x0A:
             if (!wait_key_press())
                 m_registers.PC -= 2;
-                return;
             break;
 
         case 0x15:
