@@ -1,6 +1,7 @@
 # Directories
 build/
 .kdev4/
+thirdparty/SDL2*/
 
 # Files
 CMakeLists.txt.user
